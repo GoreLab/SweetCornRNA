@@ -3,42 +3,35 @@
 # Fresh harvest @ 400 GDD script
 # Jenna Hershberger
 # jmh579@cornell.edu
-# 08/06/2019
-
-# TODO remove doubles from output
-intercross = F
+# 09/09/2019
 
 # required input:
 # args[1] = working directory ex// "~/Desktop/SweetCorn/2019"
-# args[2] = cross file path ex// "~/Desktop/crosses_jenna_2019-07-12_10:34:03.csv"
-# args[3] = output path for running list of harvested plots ex// "~/Desktop/SweetCorn/2019/running_list_harvested_2019-07-15.csv"
+# args[2] = Last pollination date harvested ex// "2019-08-10"
 
 # example:
-# Rscript GDD_app.R "~/Desktop/crosses_jenna_2019-07-29_12/34/03.csv" "~/Desktop/SweetCorn/2019" NULL
+# Rscript GDD_app.R "~/Desktop/SweetCorn/2019" "2019-08-10"
 library(tidyverse)
 library(googledrive)
 library(readxl)
 library(lubridate)
 
 # for debugging
-#args = c("~/Desktop/crosses_jenna_2019-07-12_10:34:03.csv", "~/Desktop/SweetCorn/2019", "~/Desktop/SweetCorn/2019/running_list_harvested_2019-07-15.csv")  
+#args = c("~/Desktop/SweetCorn/2019", "2019-08-10")  
 
 args = commandArgs(trailingOnly=TRUE)
 
 # test if there are three arguments: if not, return an error
 if (length(args)<1) {
-  stop("An input argument is required:\n1) Working directory\nwith optional second and third arguments:\n
-       2) Cross file path\n
-       3) Path for running list of harvested plots.\nType 'NA' for the second argument
-       to leave it blank if you just want to enter the first and third.", call.=FALSE)
+  stop("An input argument is required:\n1) Working directory\nwith optional second argument:\n
+       2) Last pollination date harvested (example: '2019-08-10')\n", call.=FALSE)
 }
 
 setwd(args[1]) #"~/Desktop/SweetCorn/2019"
 working.directory <- getwd()
 
-cross.path <- args[2] #"~/Desktop/crosses_jenna_2019-07-12_10:34:03.csv"
+last.harvested.date <- args[2] #"2019-08-10"
 
-harvested.path <- args[3] #"~/Desktop/SweetCorn/2019/running_list_harvested_2019-08-21.csv"
 
 #### functions ####
 ## Calculate GDD
@@ -95,34 +88,16 @@ sumGDDs <- function(pol_date.list, temp.df){
   return(GDD.list)
 }
 
-
 #### input data and run calculations ####
 # Get cross list 
-if(intercross){
-  cross.input <- read.csv(cross.path)
-  cross <- cross.input %>% mutate(pol_date = as.Date(timestamp, origin = "1899-12-30")) %>% 
-    rename(plot_id = female) %>% dplyr::select(pol_date, plot_id, cross_count)
-} else{
-  drive_download(file = "crosses_2019", overwrite = T) # saves to working directory
-  cross.input <- read_excel("crosses_2019.xlsx")
-  cross <- cross.input %>% 
-    mutate(pol_date = as.Date(pollination_date, format = "%m/%d/%Y")) %>% 
-    dplyr::select(pol_date, plot_id, cross_count) %>% drop_na(plot_id) %>% arrange(pol_date, plot_id)
-}
-
+drive_download(file = "crosses_2019", overwrite = T) # saves to working directory
+cross <- read_excel("crosses_2019.xlsx", na = "NA") %>% 
+  mutate(pollination_date = as.Date(pollination_date, format = "%m/%d/%Y")) %>% 
+  mutate(harvested = as.Date(harvested, format = "%m/%d/%Y"))
+# Filter to get list of previously harvested plots
 first.pollinations <- cross[match(unique(cross$plot_id), cross$plot_id),]
-
-
-
-# Get list of previously harvested plots
-if(is.null(harvested.path)|is.na(harvested.path)) {
-  harvested.input <- NA
-  } 
-
-if(!is.null(harvested.path)&!is.na(harvested.path)){
-  harvested.input <- read.csv(harvested.path)
-}
-
+first.pol.dates <- first.pollinations %>% dplyr::select(pollination_date, harvested) %>% distinct() # TODO this leaves 2 rows if there are any non-harvested plots on that day
+harvested <- cross %>% filter((harvested <= today()))
 
 # Get temperature file and calculate GDDs
 drive_download(file = "Temperature_2019.xlsx", overwrite = T) # saves to working directory
@@ -132,57 +107,60 @@ temp.df <- transform(temp.input.df, max.temp = as.numeric(max.temp),
 temp.df <- temp.input.df %>% mutate(GDD = lcalculateGDD(max.temp, min.temp)) %>% 
   mutate(date = as.Date(date, format = "%m/%d/%Y"))
 
-# calculate totals
-running.totals <- first.pollinations %>% #TODO changed this
-  mutate(total.GDD = sumGDDs(pol_date, temp.df)) 
-harvest.today <- running.totals %>% mutate(harvest.date = today()) %>% 
-  filter(total.GDD >= 400) 
-if(!is.na(harvested.input)){ # TODO fix me
-  harvest.today <- harvest.today %>% filter(!plot_id %in% as.character(harvested.input$plot_id))
-}
-  
+# calculate GDD totals for each pollination date and write to .csv
+running.totals <- first.pol.dates %>% 
+  mutate(total.GDD = sumGDDs(pollination_date, temp.df)) %>% 
+  filter(pollination_date >= last.harvested.date | pollination_date < last.harvested.date & !is.na(harvested))
+write.csv(running.totals, paste0("~/Desktop/SweetCorn/2019/running.totals.", today(), ".csv"), row.names = F)
 
-# generate new list of harvested plots including those in harvest.today
-if(is.na(harvested.input)){
-  new.harvested <- harvest.today
-} else{
-  new.harvested <- rbind(harvested.input, harvest.today)
-}
+# print yesterday's weather and running totals of GDDs for each pollination date
 cat("Yesterday's weather:\n")
 temp.df.2 <- temp.df %>% dplyr::select(-other)
 print(temp.df[nrow(na.omit(temp.df.2)),])
+cat("\nGDD running totals:")
+print(as.data.frame(running.totals))
 cat("\n")
 
-harvested.total <- cross.input %>% dplyr::select(plot_id) %>% distinct() %>% nrow()
-cat(paste0( "\n", harvested.total, " plots have been pollinated so far.\n"))
+# print count of those harvested
+pollinated.total <- cross %>% dplyr::select(plot_id) %>% distinct() %>% nrow()
+cat(paste0( "\n", nrow(harvested), " plots have been harvested so far \nout of the ", pollinated.total, " plots that have been pollinated.\n"))
 
-#### save to .csv files ####
-if(nrow(harvest.today) > 0){
-  write.csv(harvest.today, paste0(working.directory, "/harvest_", today(), ".csv"), row.names = F)
-  write.csv(new.harvested, paste0(working.directory, "/running_list_harvested_", today(), ".csv"), row.names = F)
-  cat(paste0(nrow(harvest.today), " plot(s) to harvest today.\n
-             Running list of harvested plots has been updated.\n\n"))
-} else{
-  cat("No plots to harvest today.\nRunning list of harvested plots has not changed.\n")
+
+#### create and write harvest checklists ####
+# Create full list of plots with each harvest event as a column
+df2 <- as.data.frame(matrix(nrow = 462, ncol = 5, data = NA))
+colnames(df2) <- c("plot_id", "pol_1", "pol_2", "pol_3", "pol_4")
+df2[,1] <- c(paste0("19A000", 1:9), paste0("19A00", 10:99), paste0("19A0", 100:462))
+
+cross$plot_number <- as.numeric(unlist(str_split(cross$plot_id, "A"))[c(FALSE, TRUE)])
+for(i in 1:nrow(cross)){
+  if(is.na(df2[cross$plot_number[i],2])){
+    df2[cross$plot_number[i],2] <- cross$pollination_date[i]
+  } else if(is.na(df2[cross$plot_number[i],3])){
+    df2[cross$plot_number[i],3] <- cross$pollination_date[i]
+  } else if(is.na(df2[cross$plot_number[i],4])){
+    df2[cross$plot_number[i],4] <- cross$pollination_date[i]
+  } else if(is.na(df2[cross$plot_number[i],5])){
+    df2[cross$plot_number[i],5] <- cross$pollination_date[i]
+  }
 }
-write.csv(running.totals, paste0(working.directory, "/GDD_totals_", today(), ".csv"), row.names = F)
-cat("GDD totals have been updated:\n\n")
-print(running.totals)
+df2[,2] <- as.Date(df2[,2], origin = "1970-1-1")
+df2[,3] <- as.Date(df2[,3], origin = "1970-1-1")
+df2[,4] <- as.Date(df2[,4], origin = "1970-1-1")
+df2[,5] <- as.Date(df2[,5], origin = "1970-1-1")
 
-# est.date.next.pol <- 400 - # TODO finish this
-# cat("\nEstimated date of next pollination: ")
-# print(mean(temp.df$GDD, na.rm = T)) 
+# Don't need to update pol.date.by.plot unless new pollinations are made
+# write.csv(df2, "~/Desktop/SweetCorn/2019/pol.date.by.plot.20190903.csv", row.names = F, na = "")
 
-# save to google drive
-#drive_upload(media = harvest.today.path, path = "~/Work/SweetCornPollinations2019/")
+# harvests by plot
+# remove plots with no pollinations and those that have been harvested already
+harvests.by.plot <- df2 %>% filter(!plot_id %in% harvested$plot_id) %>% filter(!is.na(pol_1))
+write.csv(harvests.by.plot, paste0("~/Desktop/SweetCorn/2019/harvests.by.plot.", today(), ".csv"), row.names = F, na ="")
 
-########## Google form version ########## 
-# responses1 <- read_excel("~/Downloads/Untitled form (Responses).xlsx")
-# responses2 <- responses1 %>% mutate(Plot = NA) %>% dplyr::select(-Pollinated)
-# for(i in 1:nrow(responses1)){
-#   plots.list <- unlist(strsplit(as.character(responses1[i, "Pollinated"]), split = "\n"))
-#   for(j in 1:length(plots.list)){
-#     responses2[(i+j-1),"Timestamp"] <- date(responses1$Timestamp[i]) # this changes dttm to a random number...
-#     responses2[(i+j-1),"Plot"] <- plots.list[j]
-#   }
-# }
+# harvests by date
+# crosses sheet with harvested plots removed
+h.plots <- harvested$plot_id
+harvests.by.date <- cross %>% filter(!plot_id %in% h.plots) %>% filter(pollination_date > last.harvested.date) %>% 
+  arrange(pollination_date, plot_number)
+write.csv(harvests.by.date, paste0("~/Desktop/SweetCorn/2019/harvests.by.date.", today(), ".csv"), row.names = F, na ="")
+
