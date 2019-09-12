@@ -110,7 +110,7 @@ temp.df <- temp.input.df %>% mutate(GDD = lcalculateGDD(max.temp, min.temp)) %>%
 # calculate GDD totals for each pollination date and write to .csv
 running.totals <- first.pol.dates %>% 
   mutate(total.GDD = sumGDDs(pollination_date, temp.df)) %>% 
-  filter(pollination_date >= last.harvested.date | pollination_date < last.harvested.date & !is.na(harvested))
+  filter(pollination_date > last.harvested.date | pollination_date <= last.harvested.date & !is.na(harvested))
 write.csv(running.totals, paste0("~/Desktop/SweetCorn/2019/running.totals.", today(), ".csv"), row.names = F)
 
 # print yesterday's weather and running totals of GDDs for each pollination date
