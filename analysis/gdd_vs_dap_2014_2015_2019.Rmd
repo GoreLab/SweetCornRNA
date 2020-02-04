@@ -1,0 +1,159 @@
+---
+title: "gdd_vs_dap_2014_2015_2019"
+author: "Jenna Hershberger"
+date: "2020-02-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+This file plots GDD vs DAP for 2014, 2015, and 2019 fresh sweet corn harvests. The analysis was initially written without Markdown during fall 2019, so this is migrated code.
+
+## Load packages, functions, and data
+### Read in cross data
+```{r load_packages}
+library(readxl)
+library(tidyverse)
+library(lubridate)
+```
+
+### Load GDD calculation functions
+```{r load_gdd_functions}
+source("./code/GDD_functions.R")
+```
+
+### Load 2019 data
+```{r}
+# make sure working directory is /SweetCornRNA/analysis
+crosses2019 <- read_excel("./data/crosses_2019.xlsx", na = "NA") %>% 
+  mutate(pollination_date = as.Date(pollination_date, format = "%m/%d/%Y")) %>% 
+  mutate(harvested = as.Date(harvested, format = "%m/%d/%Y"))
+sofar2019 <- crosses2019 %>% filter(!is.na(harvested)) %>% 
+  dplyr::select(pollination_date, harvested) %>% distinct()
+
+temp.input.df <- read_excel("./data/Temperature_2019.xlsx")
+temp.df <- transform(temp.input.df, max.temp = as.numeric(max.temp),
+                     min.temp = as.numeric(min.temp))
+temp.df <- temp.input.df %>% mutate(GDD = lcalculateGDD(max.temp, min.temp)) %>% 
+  mutate(date = as.Date(date, format = "%m/%d/%Y"))
+```
+
+### Load 2015 harvest and weather data
+```{r}
+dates.2015 <- read_excel("./data/matt_2014_2015_GDD/Harvest.xlsx", sheet = "Sheet2")
+for(i in 1:nrow(dates.2015)){
+  year(dates.2015$`First Pollination`[i]) <- 2015
+  year(dates.2015$`First Harvest Date`[i]) <- 2015
+}
+weather.2015 <- read.csv("./data/matt_2014_2015_GDD/2015 Gore Musgrave Weather by day.csv", header = T) %>% 
+  mutate(Date = as.Date(Date, format= "%m/%d/%Y")) %>% dplyr::mutate(max.temp=as.numeric(High)) %>% 
+  dplyr::mutate(min.temp=as.numeric(Low)) %>% mutate(GDD = lcalculateGDD(max.temp, min.temp)) %>% 
+  dplyr::rename(date = Date)
+for(i in 1:nrow(weather.2015)){
+  year(weather.2015$date[i]) <- 2015
+}
+```
+
+### Load 2014 harvest and weather data
+Note: no pollination dates available for 2014
+```{r}
+GDD.2014 <- read.csv("./data/matt_2014_2015_GDD/Pollination_2014.csv")
+dates.2014 <- read_excel("./data/matt_2014_2015_GDD/Harvests_20180201.xlsx", sheet = "Sheet2") 
+colnames(dates.2014)[1] <- "Row.ID"
+colnames(dates.2014)[2] <- "harvest.date"
+dates.2014 <- dates.2014 %>% 
+  mutate(harvested = as.Date(harvest.date, format = "%m-%d"))
+for(i in 1:nrow(dates.2014)){
+  year(dates.2014$harvested[i]) <- 2014
+}
+```
+
+## Calculate GDDs
+```{r}
+# 2019
+sofar2019$GDD_at_harvest <- GDDtotals(start_date_list = sofar2019$pollination_date, 
+                                      end_date_list = sofar2019$harvested, 
+                                      temp.df = temp.df)
+sofar2019$DAP <- calcDAP(start_date_list = sofar2019$pollination_date, 
+                         end_date_list = sofar2019$harvested)
+
+# 2015
+dates.2015$GDD_at_harvest <- GDDtotals(start_date_list = dates.2015$`First Pollination`, 
+                                      end_date_list = dates.2015$`First Harvest Date`, 
+                                      temp.df = weather.2015)
+dates.2015$DAP <- calcDAP(start_date_list = dates.2015$`First Pollination`, 
+                         end_date_list = dates.2015$`First Harvest Date`)
+
+# 2014 not possible because no pollination dates available
+```
+
+## Gather years into one dataset
+```{r}
+tomerge.2015 <- dates.2015 %>% 
+  dplyr::rename(pollination_date = `First Pollination`) %>%
+  dplyr::rename(harvested = `First Harvest Date`) %>% 
+  dplyr::select(pollination_date, harvested, DAP, GDD_at_harvest) %>% 
+  mutate(year = 2015)
+tomerge.2019 <- sofar2019 %>% 
+  mutate(year = 2019) %>% 
+  dplyr::select(pollination_date, harvested, DAP, GDD_at_harvest, year)
+tomerge.2014 <- dates.2014 %>% 
+  mutate(year = 2014) %>% mutate(pollination_date = NA) %>% 
+  mutate(DAP = NA) %>% 
+  full_join(GDD.2014, by = "Row.ID") %>% 
+  dplyr::rename(GDD_at_harvest = First.Harvest.GDD) %>% 
+  dplyr::select(pollination_date, harvested, DAP, GDD_at_harvest, year) %>% 
+  filter(!is.na(harvested)) %>% filter(harvested > "2014-07-01")
+# some dates in 2014 are listed as 01-01 in the input file. filtered them out.
+
+tomerge.2014$GDD_at_harvest <- as.numeric(as.character(tomerge.2014$GDD_at_harvest))
+tomerge.2015$GDD_at_harvest <- as.numeric(tomerge.2015$GDD_at_harvest)
+tomerge.2019$GDD_at_harvest <- as.numeric(tomerge.2019$GDD_at_harvest)
+
+full_dataset <- rbind(tomerge.2014, tomerge.2015, tomerge.2019)
+full_dataset$year <- as.factor(full_dataset$year)
+```
+
+## Plots
+### Diagnostics
+```{r}
+# GDD at harvest vs harvest date
+ggplot(full_dataset, aes(x = harvested, y = GDD_at_harvest, color = year)) + geom_point()
+# Histogram of 2015 harvest dates
+hist(tomerge.2015$harvested, breaks = 50)
+# Histogram of 2015 GDDs
+hist(tomerge.2015$GDD_at_harvest, breaks = 50)
+# Histogram of 2014 harvest dates
+hist(tomerge.2014$harvested, breaks = 50)
+```
+
+### Plot GDD DAP at harvest over time
+```{r}
+# Set all "harvest" column to same year for plotting purposes
+# Retain actual year column too
+full_same_year <- full_dataset %>% mutate(harvested = as.Date(harvested)) %>% distinct()
+for(i in 1:nrow(full_same_year)){
+  year(full_same_year$harvested[i]) <- 2020
+}
+
+# Plots
+gdd.date.plot <- ggplot(full_same_year, aes(x = harvested, y = GDD_at_harvest, color = year)) + geom_point() +
+  labs(x = "Harvest date", y = "GDD at harvest", title = "GDD at harvest over time", 
+       subtitle = "year set to same for all to see overlap\neach point is a unique pollination date/harvest date combination")
+
+dap.date.plot <- ggplot(full_same_year, aes(x = harvested, y = DAP, color = year)) + geom_point() +
+  labs(x = "Harvest date", y = "DAP at harvest", title = "DAP at harvest over time", 
+       subtitle = "year set to same for all to see overlap\neach point is a unique pollination date/harvest date combination\nno DAP, harvest, or pollination dates given for 2014")
+
+gdd.date.plot
+dap.date.plot
+```
+
+## Save to output folder
+```{r}
+ggsave(gdd.date.plot, filename = "./output/gdd_by_date.png",  bg = "transparent", height=5, width=9)
+ggsave(dap.date.plot, filename = "./output/dap_by_date.png",  bg = "transparent", height=5, width=9)
+```
+
+
