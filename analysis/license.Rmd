@@ -6,7 +6,6 @@ output:
 editor_options:
   chunk_output_type: console
 ---
-
 The code is available under [GNU General Public License v3.0][gnu].
 
 What license are you using for the written content on your site? It is
