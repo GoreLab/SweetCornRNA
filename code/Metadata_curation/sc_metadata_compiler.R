@@ -101,12 +101,6 @@ meta <- layout_full %>%
 
 write.csv(meta, "~/Documents/GitHub/SweetCornRNA/output/metadata_for_Josh.csv", row.names = F, na = "")
 
-         # ,
-         # library_method = NA,
-         # library_pool = NA,
-         # `library_concentration_via_qubit_ng/ul` = NA,
-         #
-         # )
 
 
 
