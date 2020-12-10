@@ -175,7 +175,7 @@ names(ran.ef.extract) <- rownames(ran.ef.extract.tmp)
 # make a long vector for output
 vec.out <- c(vec.var, vec.int, fix.ef.check, ran.ef.geno, 
              ran.ef.range, ran.ef.block, ran.ef.col, ran.ef.row,
-             ran.ef.plate, ran.ef.extract) # add plate
+             ran.ef.plate, ran.ef.extract)
 
 # write the result as a text file
 df.save <- data.frame("Model.Term" = names(vec.out), "Est.effect" = vec.out, row.names = NULL)
