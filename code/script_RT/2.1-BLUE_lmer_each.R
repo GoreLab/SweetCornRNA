@@ -8,7 +8,7 @@ dir.in.rlog <- "RAWDATA/Seetcorn_TagSeq"
 file.in.rlog <- "htseq_count_matrix_sweetcorn_B73_RLOG_all_info_v1.txt"
 dir.in.key <- "RAWDATA"
 file.in.key <- "master_key.csv"
-dir.in.expinfo <- "RAWDATA/MetaData"
+dir.in.expinfo <- "RAWDATA/Metadata"
 file.in.expinfo <- "rnaseq_trial_2019_upload.csv"
 dir.save <- "RESULT/2.1-BLUE_lmer"
   
@@ -90,8 +90,6 @@ df.fit <- data.frame("y" = df.model$Expr.rlog,
                      "Harvest.Date" = days.harvest,
                      "RnaExtract" = as.factor(rna.extract))
 
-df.fit[df.fit$Genotype == "2", ]
-
 # --------------------------------------------------------------------------- #
 # ----- 3. fit the model & get results
 # --------------------------------------------------------------------------- #
@@ -164,7 +162,7 @@ names(ran.ef.extract) <- rownames(ran.ef.extract.tmp)
 # make a long vector for output
 vec.out <- c(vec.var, fix.ef.geno, fix.ef.extract,
              ran.ef.range, ran.ef.block, ran.ef.col, ran.ef.row,
-             ran.ef.plate, ran.ef.extract)
+             ran.ef.plate, ran.ef.extract) # add plate
 
 # write the result as a text file
 df.save <- data.frame("Model.Term" = names(vec.out), "Est.effect" = vec.out, row.names = NULL)

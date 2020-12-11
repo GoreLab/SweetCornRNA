@@ -8,7 +8,7 @@ dir.in.rlog <- "RAWDATA/Seetcorn_TagSeq"
 file.in.rlog <- "htseq_count_matrix_sweetcorn_B73_RLOG_all_info_v1.txt"
 dir.in.key <- "RAWDATA"
 file.in.key <- "master_key.csv"
-dir.in.expinfo <- "RAWDATA/MetaData"
+dir.in.expinfo <- "RAWDATA/Metadata"
 file.in.expinfo <- "rnaseq_trial_2019_upload.csv"
 dir.save <- "RESULT/2.2-BLUP_lmer"
 
@@ -132,8 +132,8 @@ names(vec.int) <- "Intercept"
 fix.ef.check <- fe[2:(length(fe)-1)]
 names(fix.ef.check) <- substr(names(fix.ef.check), 28, 999)
 
-# slope for RNA extract date
-fix.ef.extract <- tail(fe, 1)
+# slope for harvest date
+fix.ef.harvest <- tail(fe, 1)
 
 # gentypic values
 ran.ef.geno.tmp <- re$Genotype; colnames(ran.ef.geno.tmp) <- NULL
@@ -173,7 +173,7 @@ ran.ef.extract <- unlist(ran.ef.extract.tmp)
 names(ran.ef.extract) <- rownames(ran.ef.extract.tmp)
 
 # make a long vector for output
-vec.out <- c(vec.var, vec.int, fix.ef.check, ran.ef.geno, 
+vec.out <- c(vec.var, vec.int, fix.ef.harvest, fix.ef.check, ran.ef.geno, 
              ran.ef.range, ran.ef.block, ran.ef.col, ran.ef.row,
              ran.ef.plate, ran.ef.extract)
 
