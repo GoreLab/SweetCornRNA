@@ -8,10 +8,8 @@ model <- args[1]
 method <- args[2]
 n.fold <- 5
 n.rep <- 10
-nIter <- 1200
-burnIn <- 800
-model = "BLUE"
-method = "lmer"
+nIter <- 12000
+burnIn <- 8000
 
 # mkdir
 dir.save <- "RESULT/6.1-Prediction_toco"
