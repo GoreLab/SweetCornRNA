@@ -124,7 +124,7 @@ dir.log <- paste0(dir.save, "/LOGFILE")
 dir.create(dir.log, recursive = T)
 
 # define a function to do cross validation
-myFun.Cv <- function(y.all = y.all, ETA = ETA.mGRM, df.CV = df.CV,
+myFun.Cv <- function(y.all, ETA, df.CV,
                      nIter = 12000, burnIn = 8000,
                      name.log = paste0(dir.log, "/fm_"), ...) {
    # get numbers
@@ -148,7 +148,7 @@ myFun.Cv <- function(y.all = y.all, ETA = ETA.mGRM, df.CV = df.CV,
          y.obs[cv.num == k] <- NA # mask phenotype
          
          # run prediction
-         fm <- BGLR(y = y.obs, ETA = ETA.mGRM,
+         fm <- BGLR(y = y.obs, ETA = ETA,
                     nIter = nIter, burnIn = burnIn, verbose = F,
                     saveAt = name.log)
          pred.vec[cv.num == k] <- fm$yHat[cv.num == k]
