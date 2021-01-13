@@ -41,18 +41,30 @@ sum(sample.info.df$Genotype == "CHECK2") # 16 check2
 sum(sample.info.df$Genotype == "CHECK3") # 14 check3
 sum(sample.info.df$Genotype == "CHECK4") # 5 check4
 
-# missing value?
-sum(is.na(rlog.mat)) # 20741 NA
-rlog.vec.zero.count <- apply(rlog.mat == 0, 2, sum)
-sum(is.na(rlog.vec.zero.count)) # all 20741 NA are for one sample
-which(is.na(rlog.vec.zero.count)) # this sample is the one... the last sample.
-  # any error in upload/download process? (truncation happened?)
+# missing values?
+sum(is.na(rlog.mat)) # 0 -- no missing values
 
-# make a histogram
+
+
+# number of zero count for each gene
+non.zero.count.vec.genes <- ncol(rlog.mat) - apply(rlog.mat == 0, 1, sum)
+zero.count.vec.genes <- ncol(rlog.mat) - non.zero.count.vec.genes
+zero.prop.vec.genes <- zero.count.vec.genes / ncol(rlog.mat)
+hist(zero.prop.vec.genes, breaks = 20,
+     xlab = "Proportion of zero rlog2 value",
+     main = "Histogram of 20065 genes", col = "grey")
+
+
+# If we apply a filter removing genes with greater than 90% of samples with a value of zero:
+sum(zero.prop.vec.genes > .9) # we remove 1265 genes == 6.3%
+1265/20065
+
+# make a histogram -- by sample
+rlog.vec.zero.count <- apply(rlog.mat == 0, 2, sum)
 rlog.vec.non.zero.ratio <- 1 - rlog.vec.zero.count / nrow(rlog.mat)
-hist(rlog.vec.non.zero.ratio,
+rlog.vec.non.zero.ratio.hist <- hist(rlog.vec.non.zero.ratio,
      xlab = "Proportion of non-zero rlog2 value",
-     main = "Histogram of 433 samples")
+     main = "PH207 Histogram of 433 samples", col = "grey")
 
 # make a boxplot for plate effects
 rlog.vec.zero.count <- apply(rlog.mat == 0, 2, sum)
@@ -62,8 +74,10 @@ df.fig <- df.fig[sample.info.df$ID != "Pos", ] # remove positive control
 p <- ggplot(df.fig, aes(x = Plate, y = Number.of.zero.count))
 p <- p + geom_violin()
 p <- p + geom_boxplot(width = 0.1)
-p <- p + ggtitle("# of zero count for different trait")
+p <- p + ggtitle("PH207 # of zero count for different trait")
 p
+
+ggsave(plot = p, "./output/PH207_by_plate.png", bg = "transparent", units = "in", width = 5, height = 4)
 
 # correlation among samples
 # tf.NA <- colnames(rlog.mat) %in% "SC_RNA_05_B10_19A0135_We09425"
@@ -76,14 +90,17 @@ vec.lowest.cor <- apply(CorMat.Sample, 1, which.min)
 heatmap.2(CorMat.Sample, trace = 'none')
 
 # lowest correlation
+hist(vec.min.cor, col = "grey",
+     xlab = "Minimum correlation",
+     main = "PH207 Histogram of 433 samples")
 table(vec.lowest.cor) # PH207 found 4 samples: 142, 165, 385, 407 ## NOTE 407 and 165 were also id'd in B73
 colnames(rlog.mat)[c(142, 165, 385, 407)] # these are the three samples
 
 # plots
 plot(x = rlog.mat[, 407], y = rlog.mat[, 1], pch = 20,
      xlab = colnames(rlog.mat)[407], ylab = colnames(rlog.mat)[1])
-plot(x = rlog.mat[, 385], y = rlog.mat[, 1], pch = 20,
-     xlab = colnames(rlog.mat)[385], ylab = colnames(rlog.mat)[1])
+# plot(x = rlog.mat[, 385], y = rlog.mat[, 1], pch = 20,
+#      xlab = colnames(rlog.mat)[385], ylab = colnames(rlog.mat)[1])
 plot(x = rlog.mat[, 165], y = rlog.mat[, 1], pch = 20,
      xlab = colnames(rlog.mat)[165], ylab = colnames(rlog.mat)[1])
 plot(x = rlog.mat[, 142], y = rlog.mat[, 1], pch = 20,
@@ -107,13 +124,3 @@ hist(rlog.mat["Zm00008a027192", ], breaks = 100,
 # histogram of minimun cor
 hist(vec.min.cor, xlab = "Minimum correlation",
      main = "Histogram of 433 samples")
-
-# number of zero count for each gene
-# tf.NA <- colnames(rlog.mat) %in% "SC_RNA_05_B10_19A0135_We09425"
-# rlog.mat.rm.NA <- rlog.mat[, !tf.NA]
-non.zero.count.vec.genes <- ncol(rlog.mat) - apply(rlog.mat == 0, 1, sum)
-zero.count.vec.genes <- ncol(rlog.mat) - non.zero.count.vec.genes
-zero.prop.vec.genes <- zero.count.vec.genes / ncol(rlog.mat)
-hist(zero.prop.vec.genes, breaks = 20,
-     xlab = "Proportion of zero rlog2 value",
-     main = "Histogram of 20065 genes")
