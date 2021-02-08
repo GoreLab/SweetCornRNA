@@ -16,3 +16,11 @@ Many codes afrer the BLUE calculation are updated. Below is the list of changes:
 [4] For the genomic prediction, we use GRM calculated from all SNPs (for TWAS, we are using kinship matrix calculated from a subset of SNPs)
 
 
+# ---------- quick notes ---------- #
+Q. Why do we use rrBLUP::GWAS instead of GAPIT for the TWAS analysis?
+A. Because we need to use continuious explanatory variable (= PEER residuals) in TWAS. Further, we have missing values in our PEER data due to the outlier removal. For this type of data, GAPIT does not work well, but rrBLUP does. In our internal comparison, rrBLUP::GWAS and GAPIT are comparable, meaning that their P-values are almost 100% correlated (though their absolute values are not perfectly the same). Thus, we think it is no problem to use rrBLUP instead of GAPIT for TWAS. Note that I also checked that the principal component calcualtion in rrBLUP is equivalent to the one in GAPIT (both calcualte eigenvector from the kinship matrix)
+
+Q. Why there are two outlier removal codes?
+A. One code uses base-R functions for the outlier removal, while the other uses asreml. I had confiemd that they are 100% equivalent (i.e., studentized residuals are same), at least for the B73-aligend dataset. As we are fitting an intercept-only model (very simple!), we do not have to use asreml. The reason why we have asreml-version is simply because we had been using it (together with other calcualtion steps such as BLUE/BLUP model fitting). You can use either one (as they are same).
+
+
