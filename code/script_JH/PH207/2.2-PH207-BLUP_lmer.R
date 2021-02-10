@@ -1,4 +1,4 @@
-# calculate BLUE via lme4
+# calculate BLUP via lme4
 
 # get argument from command line
 args <- commandArgs(trailingOnly = T)
@@ -9,17 +9,18 @@ e <- as.numeric(args[2]) # end
 library(lme4)
 
 # file I/O
-dir.in.rlog <- "Sweetcorn_TagSeq"
-file.in.rlog <- "htseq_count_matrix_sweetcorn_PH207_RLOG_all_info_v1.txt"
-dir.in.key <- "Sweetcorn_TagSeq"
+dir.in.rlog <- "RAWDATA/Seetcorn_TagSeq"
+file.in.rlog <- "htseq_count_matrix_sweetcorn_B73_RLOG_all_info_v1.txt"
+dir.in.key <- "RAWDATA"
 file.in.key <- "master_key.csv"
-dir.in.expinfo <- "Sweetcorn_TagSeq"
+dir.in.expinfo <- "RAWDATA/Metadata"
 file.in.expinfo <- "rnaseq_trial_2019_upload.csv"
-dir.save <- "PH207/2.1-PH207-BLUE_lmer"
+dir.save <- "RESULT/2.2-BLUP_lmer"
 
 # objects
 r <- s:e # from s to e-th gene
 name.tech.ctrl <- c("Control_NA", "fill_c1", "fill_c2", "fill_c3", "fill_c4")
+name.check <- c("CHECK1", "CHECK2", "CHECK3", "CHECK4")
 
 # make dir to save result
 dir.create(dir.save, recursive = TRUE)
@@ -93,6 +94,7 @@ for ( i in s:e ) {
 
   # final data
   df.fit <- data.frame("y" = df.model$Expr.rlog,
+                       "Switch" = df.model$is_a_control,
                        "Genotype" = df.model$accession_name,
                        "Range" = as.factor(df.model$range_number),
                        "Block" = as.factor(df.model$block_number),
@@ -105,15 +107,16 @@ for ( i in s:e ) {
   # save the data frame to build BLUE/BLUP model
   if ( i == 1 ) {
     df.save <- df.fit[, -1]
-    write.csv(df.save, file = paste0(dir.save, "/PH207_DataFrame_BLUE.csv"))
+    write.csv(df.save, file = paste0(dir.save, "/PH207_DataFrame_BLUP.csv"))
   }
 
   # --------------------------------------------------------------------------- #
   # ----- 3. fit the model & get results
   # --------------------------------------------------------------------------- #
-  # fit the model (BLUE)
+  # fit the model (BLUP)
   res.try <- try(
-    res <- lmer(y ~ -1 + Genotype + Harvest.Date
+    res <- lmer(y ~ dummy(Genotype, name.check) + Harvest.Date
+                + (0+dummy(Switch, "0")|Genotype)
                 + (1|Range)
                 + (1|Range:Block)
                 + (1|Range:Block:Column)
@@ -130,6 +133,7 @@ for ( i in s:e ) {
     vc <- VarCorr(res)
 
     # variance comp
+    geno.var <- attr(vc$Genotype, "stddev") ^ 2
     range.var <- attr(vc$Range, "stddev") ^ 2
     block.var <- attr(vc$`Range:Block`, "stddev") ^ 2
     column.var <- attr(vc$`Range:Block:Column`, "stddev") ^ 2
@@ -137,17 +141,26 @@ for ( i in s:e ) {
     plate.var <- attr(vc$Plate, "stddev") ^ 2
     extract.var <- attr(vc$RnaExtract, "stddev") ^ 2
     resid.var <- attr(vc, "sc") ^ 2
-    vec.var <- c(range.var, block.var, column.var, row.var,
+    vec.var <- c(geno.var, range.var, block.var, column.var, row.var,
                  plate.var, extract.var, resid.var) # add plate
-    names(vec.var) <- c("var.range", "var.block", "var.column", "var.row",
+    names(vec.var) <- c("var.geno", "var.range", "var.block", "var.column", "var.row",
                         "var.plate", "var.extract", "var.resid") # add plate
 
-    # genotypic values
-    fix.ef.geno <- fe[1:(length(fe)-1)]
-    names(fix.ef.geno) <- substr(names(fix.ef.geno), 9, 999)
+    # grand mean
+    vec.int <- fe[1]
+    names(vec.int) <- "Intercept"
 
-    # slope for RNA extract date
-    fix.ef.extract <- tail(fe, 1)
+    # genotypic values of check
+    fix.ef.check <- fe[2:(length(fe)-1)]
+    names(fix.ef.check) <- substr(names(fix.ef.check), 28, 999)
+
+    # slope for harvest date
+    fix.ef.harvest <- tail(fe, 1)
+
+    # gentypic values
+    ran.ef.geno.tmp <- re$Genotype; colnames(ran.ef.geno.tmp) <- NULL
+    ran.ef.geno <- unlist(ran.ef.geno.tmp)
+    names(ran.ef.geno) <- rownames(ran.ef.geno.tmp)
 
     # range effects
     ran.ef.range.tmp <- re$Range; colnames(ran.ef.range.tmp) <- NULL
@@ -182,21 +195,20 @@ for ( i in s:e ) {
     names(ran.ef.extract) <- rownames(ran.ef.extract.tmp)
 
     # make a long vector for output
-    vec.out <- c(vec.var, fix.ef.geno, fix.ef.extract,
+    vec.out <- c(vec.var, vec.int, fix.ef.harvest, fix.ef.check, ran.ef.geno,
                  ran.ef.range, ran.ef.block, ran.ef.col, ran.ef.row,
                  ran.ef.plate, ran.ef.extract) # add plate
 
     # write the result as a text file
     df.save <- data.frame("Model.Term" = names(vec.out), "Est.effect" = vec.out, row.names = NULL)
     write.csv(df.save,
-              file = paste0(dir.save, "/PH207_BLUE_", formatC(i, digits = 5, flag = "0"), ".csv"),
+              file = paste0(dir.save, "/PH207_BLUP_", formatC(i, digits = 5, flag = "0"), ".csv"),
               row.names = FALSE)
 
     # write warning message
     wrn.message <- unlist(res@optinfo$conv$lme4$messages)
     write(wrn.message,
-          file = paste0(dir.save, "/PH207_warning_BLUE_", formatC(i, digits = 5, flag = "0"), ".txt"))
-
+          file = paste0(dir.save, "/PH207_warning_BLUP_", formatC(i, digits = 5, flag = "0"), ".txt"))
   } else {
     i.error <- c(i.error, i)
   }
@@ -205,6 +217,5 @@ for ( i in s:e ) {
 # write the result as a text file
 df.save <- data.frame("num.error" = i.error)
 write.csv(df.save,
-          file = paste0(dir.save, "/PH207_BLUE_num_error_from_", s, "_to_", e, ".csv"),
+          file = paste0(dir.save, "/PH207_BLUP_num_error_from_", s, "_to_", e, ".csv"),
           row.names = F)
-

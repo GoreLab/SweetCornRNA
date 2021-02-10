@@ -4,13 +4,13 @@
 library(lme4)
 
 # file I/O
-dir.in.rlog <- "RAWDATA/Sweetcorn_TagSeq"
+dir.in.rlog <- "Sweetcorn_TagSeq"
 file.in.rlog <- "htseq_count_matrix_sweetcorn_PH207_RLOG_all_info_v1.txt"
-dir.in.key <- "RAWDATA/Sweetcorn_TagSeq"
+dir.in.key <- "Sweetcorn_TagSeq"
 file.in.key <- "master_key.csv"
-dir.in.expinfo <- "RAWDATA/Sweetcorn_TagSeq"
+dir.in.expinfo <- "Sweetcorn_TagSeq"
 file.in.expinfo <- "rnaseq_trial_2019_upload.csv"
-dir.save <- "RESULTS/2.1-PH207-BLUE_lmer"
+dir.save <- "PH207/2.1-PH207-BLUE_lmer"
 
 # objects
 i <- 5332 # i-th gene to be used

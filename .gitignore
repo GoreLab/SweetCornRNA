@@ -6,6 +6,7 @@ analysis/*html
 analysis/*_cache
 analysis/site_libs
 data/
+output/
 
 # History files
 .Rhistory
