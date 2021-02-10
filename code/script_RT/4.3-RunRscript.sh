@@ -1,3 +1,3 @@
 #!/bin/bash
-nohup R --vanilla --slave < 4.3-Peer_UseOptFact.R --args BLUE lmer 13 > LOGFILE/out_431.txt &
-nohup R --vanilla --slave < 4.3-Peer_UseOptFact.R --args BLUP lmer 15 > LOGFILE/out_432.txt &
+cd /workdir/rt475/Sweetcorn
+nohup R --vanilla --slave < 4.3-Peer_UseOptFact.R --args BLUE lmer 12 > LOGFILE/out_43.txt &

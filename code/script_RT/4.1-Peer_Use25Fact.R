@@ -12,7 +12,7 @@ K <- 25
 rand.seed <- 2020
 
 # file I/O
-file.input <- paste0("RESULT/3.1-MergeBlueBlup_lmer/", model, "_", method, ".csv")
+file.input <- paste0("RESULT/3.4-Filtering_BLUE/", model, "_", method, "_filtered.csv")
 file.out.pdf <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_plotModel.pdf")
 file.out.factors <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_factors.txt")
 file.out.weights <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_weights.txt")

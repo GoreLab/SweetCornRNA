@@ -5,7 +5,7 @@
 library(qqman)
 
 # mkdir
-dir.save <- "RESULT/5.2-MakeManhattan"
+dir.save <- "RESULT/5.3-MakeManhattan"
 dir.create(dir.save, recursive = T)
 
 # object
@@ -22,7 +22,7 @@ fig.file <- paste0(dir.save, "/TWAS_manhattan_all.pdf")
 pdf(fig.file, width = 8, height = 4)
 for ( trait in traits ) {
   # load data
-  file <- paste0("RESULT/5.1-TWAS_toco/TwasResult_BLUE_lmer_", trait, ".csv")
+  file <- paste0("RESULT/5.2-TWAS_toco_ver2/TwasResult_", trait, ".csv")
   res.twas <- read.csv(file)
   
   # remove ctg/Mt/Pt

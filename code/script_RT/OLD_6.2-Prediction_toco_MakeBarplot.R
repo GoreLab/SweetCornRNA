@@ -15,10 +15,10 @@ traits <- colnames(Pheno.All)[6:ncol(Pheno.All)]
 df.fig <- NULL
 for ( trait in traits ) {
   # input file
-  folder <- "RESULT/6.1-Prediction_toco_UseFull"
-  file.mGRM <- paste0("PredictionResult_", trait, "_mGRM.csv")
-  file.tGRM <- paste0("PredictionResult_", trait, "_tGRM.csv")
-  file.mGRM.tGRM <- paste0("PredictionResult_", trait, "_mGRM.tGRM.csv")
+  folder <- "RESULT/6.1-Prediction_toco"
+  file.mGRM <- paste0("PredictionResult_", trait, "_mGRM_BLUE_lmer.csv")
+  file.tGRM <- paste0("PredictionResult_", trait, "_tGRM_BLUE_lmer.csv")
+  file.mGRM.tGRM <- paste0("PredictionResult_", trait, "_mGRM.tGRM_BLUE_lmer.csv")
   
   # load
   dat.mGRM <- read.csv(file = paste0(folder, "/", file.mGRM))
@@ -111,7 +111,7 @@ bp <- barplot(height = Means, beside = TRUE,
               cex.lab = 10 / 8,
               border = "black",
               las = 1,
-              legend.text = c("T-only", "G-only", "G+T"),
+              legend.text = c("G-only", "T-only", "G+T"),
               args.legend = list(x = "topright", text.font = 3))
 arrows(x0 = -2.1, y0 = 0, x1 = nlevels(df.fig$Trait) * (1 + nlevels(df.fig$Method)) + 2.1, length = 0)
 

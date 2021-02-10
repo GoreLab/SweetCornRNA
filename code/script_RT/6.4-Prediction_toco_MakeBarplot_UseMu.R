@@ -1,7 +1,7 @@
 library(plotrix)
 
 # mkdir
-dir.save <- "RESULT/6.2-Prediction_toco_Makebarplot"
+dir.save <- "RESULT/6.4-Prediction_toco_Makebarplot_UseMu"
 dir.create(dir.save)
 
 # load phenotype data
@@ -15,7 +15,7 @@ traits <- colnames(Pheno.All)[6:ncol(Pheno.All)]
 df.fig <- NULL
 for ( trait in traits ) {
   # input file
-  folder <- "RESULT/6.1-Prediction_toco_UseFull"
+  folder <- "RESULT/6.3-Prediction_toco_UseFull_UseMu"
   file.mGRM <- paste0("PredictionResult_", trait, "_mGRM.csv")
   file.tGRM <- paste0("PredictionResult_", trait, "_tGRM.csv")
   file.mGRM.tGRM <- paste0("PredictionResult_", trait, "_mGRM.tGRM.csv")
@@ -104,7 +104,7 @@ pdf(paste0(dir.save, "/PredictionAccuracy.pdf"), width = 25, height = 10)
 df.fig$Method <- factor(df.fig$Method, levels = c("T-only", "G-only", "G+T"))
 Means <- xtabs(AVG ~ Method + Trait, data = df.fig)
 bp <- barplot(height = Means, beside = TRUE,
-              ylim = c(-0.2, 1), font.axis = 1, font.lab = 2,
+              ylim = c(0, 1), font.axis = 1, font.lab = 2,
               main = "",
               ylab = "Accuracy (Pearson's correlation)",
               xlab = "Traits",

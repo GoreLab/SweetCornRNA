@@ -2,24 +2,26 @@
 library(data.table)
 library(peer)
 
-# params
+# get argument from command line
 args <- commandArgs(trailingOnly = T)
 model <- args[1]
 method <- args[2]
-K <- as.numeric(args[3]) # number of factors
+
+# params
+K <- 25
 rand.seed <- 2020
 
 # file I/O
-file.input <- paste0("RESULT/3.4-Filtering_BLUE/", model, "_", method, "_filtered.csv")
-file.out.pdf <- paste0("RESULT/4.3-Peer_UseOptFact/PeerResult_UseOptFact_", model, "_", method, "_plotModel.pdf")
-file.out.factors <- paste0("RESULT/4.3-Peer_UseOptFact/PeerResult_UseOptFact_", model, "_", method, "_factors.txt")
-file.out.weights <- paste0("RESULT/4.3-Peer_UseOptFact/PeerResult_UseOptFact_", model, "_", method, "_weights.txt")
-file.out.precision <- paste0("RESULT/4.3-Peer_UseOptFact/PeerResult_UseOptFact_", model, "_", method, "_precision.txt")
-file.out.residuals <- paste0("RESULT/4.3-Peer_UseOptFact/PeerResult_UseOptFact_", model, "_", method, "_residuals.txt")
-file.out.seed <- paste0("RESULT/4.3-Peer_UseOptFact/PeerResult_UseOptFact_", model, "_", method, "_seed.txt")
+file.input <- paste0("RESULT/3.1-MergeBlueBlup_lmer/", model, "_", method, ".csv")
+file.out.pdf <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_plotModel.pdf")
+file.out.factors <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_factors.txt")
+file.out.weights <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_weights.txt")
+file.out.precision <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_precision.txt")
+file.out.residuals <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_residuals.txt")
+file.out.seed <- paste0("RESULT/4.1-Peer_Use25Fact/PeerResult_Use25Fact_", model, "_", method, "_seed.txt")
 
 # mkdir
-dir.create("RESULT/4.3-Peer_UseOptFact")
+dir.create("RESULT/4.1-Peer_Use25Fact")
 
 # load data
 ex_clean.raw <- fread(file = file.input, head = TRUE, data.table = F)
