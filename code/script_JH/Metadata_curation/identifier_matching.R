@@ -58,7 +58,8 @@ toco_hplc_blup_ids <- toco_hplc_blup_ids %>%
                                  "T24_395_68B" = "T24",
                                  "T32_397_68r" = "T32",
                                  "T33_399_68B" = "T33",
-                                 "T35_388_68A" = "T35"))
+                                 "T35_388_68A" = "T35",
+                                 "P39LE_261_61" = "P39LE_261"))
 
 # use toco changes to update carotenoid names
 carot_hplc_blup_ids <- carot_hplc_blup_ids %>%
@@ -79,7 +80,8 @@ carot_hplc_blup_ids <- carot_hplc_blup_ids %>%
                                  "T24_395_68B" = "T24",
                                  "T32_397_68r" = "T32",
                                  "T33_399_68B" = "T33",
-                                 "T35_388_68A" = "T35"))
+                                 "T35_388_68A" = "T35",
+                                 "P39LE_261_61" = "P39LE_261"))
 
 ion_blup_ids <- ion_blup_ids %>%
   mutate(accession_name_ion = accession_name) %>%
@@ -101,7 +103,8 @@ ion_blup_ids <- ion_blup_ids %>%
                                  "T24_395_68B" = "T24",
                                  "T32_397_68r" = "T32",
                                  "T33_399_68B" = "T33",
-                                 "T35_388_68A" = "T35"))
+                                 "T35_388_68A" = "T35",
+                                 "P39LE_261_61" = "P39LE_261"))
 
 # full_join all pheno datasets with rlog ids and field layout info
 master.key <- as.data.frame(rlog_ids) %>%
@@ -123,6 +126,55 @@ master.key <- as.data.frame(rlog_ids) %>%
                 tissue_harvest_date, nucleic_acid_extraction_date)
 
 write.csv(master.key, "./output/master_key.csv", row.names = F)
+
+master.key.all.venn <- as.data.frame(rlog_ids) %>%
+  separate(rlog_ids, into = c("SC", "RNA", "plate_number", "well", "plot_name", "accession", "extra"), remove = F) %>%
+  mutate(accession_name = ifelse(is.na(extra), accession, paste(accession, extra, sep = "_"))) %>%
+  mutate(plate_name = paste(SC, RNA, plate_number, sep = "_")) %>%
+  mutate(plate_number = as.numeric(plate_number)) %>%
+  mutate(sample_name_metadata = plot_name) %>%
+  dplyr::select(rlog_ids, sample_name_metadata, plate_name, plate_number, well, plot_name, accession_name) %>%
+  full_join(field_coordinates, by = c("plot_name", "accession_name")) %>%
+  full_join(toco_hplc_blup_ids[,c("accession_name", "accession_name_toco")], by = "accession_name") %>%
+  full_join(carot_hplc_blup_ids[,c("accession_name", "accession_name_carot")], by = "accession_name") %>%
+  full_join(ion_blup_ids[,c("accession_name", "accession_name_ion")], by = "accession_name") %>%
+  full_join(rna_metadata, by = "plot_name") %>%
+  #filter(!is.na(well)) %>%
+  filter(!is.na(accession_name),
+         !str_detect(accession_name, "Raw GBS sequence"),
+         !str_detect(accession_name, "CHECK"),
+         !str_detect(accession_name, "Control"),
+         !str_detect(accession_name, "fill")) %>%
+  mutate(accession_name_toco = ifelse(is.na(accession_name_toco), NA, accession_name),
+         accession_name_carot = ifelse(is.na(accession_name_carot), NA, accession_name),
+         accession_name_ion = ifelse(is.na(accession_name_ion), NA, accession_name),
+         accession_name = ifelse(is.na(well), NA, accession_name)) %>%
+  arrange(plate_name, well) %>%
+  dplyr::select(rlog_ids, sample_name_metadata, plot_name, accession_name, accession_name_toco,
+                accession_name_carot, accession_name_ion, plate_name, plate_number, well,
+                tissue_harvest_date, nucleic_acid_extraction_date) %>%
+  rename(RNA = accession_name,
+         Tocochromanols = accession_name_toco,
+         Carotenoids = accession_name_carot,
+         Ionomics = accession_name_ion) %>%
+  dplyr::select(RNA, Tocochromanols, Carotenoids, Ionomics) %>%
+  distinct()
+
+length(unique(master.key.all.venn$RNA)) # one of these is NA
+
+vennlist <- list(RNA = na.omit(master.key.all.venn$RNA),
+                 Tocochromanols = na.omit(master.key.all.venn$Tocochromanols),
+                 Carotenoids = na.omit(master.key.all.venn$Carotenoids),
+                 Ionomics = na.omit(master.key.all.venn$Ionomics))
+
+sapply(master.key.all.venn, function(x) sum(!is.na(x)))
+
+RNAvenn <- ggVennDiagram(vennlist, label_alpha = 0)
+RNAvenn
+
+ggsave(plot = RNAvenn, filename = "./output/RNA_venn.png", device = "png",units = "in",
+       width = 7, height = 7)
+
 
 
 # make sure accession names match hplc blups
