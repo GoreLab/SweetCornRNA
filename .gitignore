@@ -1,12 +1,9 @@
 .Ruserdata
 .DS_Store
-analysis/figure
-analysis/*png
-analysis/*html
-analysis/*_cache
-analysis/site_libs
-data/
-output/
+RAWDATA/
+RESULT/
+Hershberger_SweetCornRNA_2021.zip
+Hershberger*
 
 # History files
 .Rhistory
