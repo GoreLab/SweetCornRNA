@@ -1,5 +1,6 @@
 #  Hershberger et al. Transcriptome-wide association and prediction for carotenoids and tocochromanols in fresh sweet corn kernels
 ![language: R](https://img.shields.io/badge/language-R-blue.svg)
+[![DOI:10.1101/2021.09.24.461734](http://img.shields.io/badge/DOI-10.1101/2021.09.24.461734-B31B1B.svg)](https://doi.org/10.1101/2021.09.24.461734)
 
 # PREPRINT
 
