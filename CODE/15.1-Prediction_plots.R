@@ -234,7 +234,7 @@ accuracy.df %>% filter(Trait == "Zeinoxanthin") %>% filter(MutantTypeIncluded) %
 
 
 #### MANUSCRIPT ####
-# accuracy.df <- read.csv("./RESULT/prediction_accuracies_all_stratified_manuscript.csv")
+accuracy.df <- read.csv("./RESULT/15.1-Prediction_plots/prediction_accuracies_all_stratified_manuscript.csv")
 library(ggsci)
 library(tidyverse)
 library(ggtext)
@@ -244,34 +244,27 @@ plotmanuscript <- accuracy.df %>%
   mutate(TraitCategory = as.character(TraitCategory),
          SubCategory = as.character(SubCategory),
          plot_categories = case_when(
-           TraitCategory == "carot" ~ "Carotenoids",
+           TraitCategory == "Carotenoid" ~ "Carotenoids",
            SubCategory == "Tocochromanol summary" ~ NA_character_,
            SubCategory == "Tocopherol" ~ "Tocopherols",
            SubCategory == "Tocotrienol" ~ "Tocotrienols"),
-         Model = recode_factor(Model,
-                               "mGRM" = "GRM",
-                               "tGRM.B73" = "TRM.B73",
-                               "tGRM.Ia453" = "TRM.Ia453",
-                               "tGRM.cand" = "TRM.cand",
-                               "tGRM.non.cand" = "TRM.non.cand",
-                               "tGRM.both" = "TRM.both",
-                               "mGRM.tGRM.B73" = "GRM + TRM.B73",
-                               "mGRM.tGRM.Ia453" = "GRM + TRM.Ia453",
-                               "mGRM.tGRM.cand" = "GRM + TRM.cand",
-                               "mGRM.tGRM.non.cand" = "GRM + TRM.non.cand",
-                               "mGRM.tGRM.both" = "GRM + TRM.both"),
-         ModelType = factor(ModelType, levels = c("GRM", "TRM", "GRM + TRM"))) %>%
+         ModelType = factor(ModelType, levels = c("GRM", "GRM + TRM", "TRM")),
+         Model = factor(Model, levels = c("GRM", "GRM + TRM.B73", "GRM + TRM.Ia453",
+                                          "GRM + TRM.cand","GRM + TRM.non.cand",
+                                          "GRM + TRM.both", "TRM.B73", "TRM.Ia453",
+                                          "TRM.cand", "TRM.non.cand", "TRM.both"))) %>%
   drop_na(plot_categories) %>%
   mutate(plot_categories = factor(plot_categories)) %>%
-  ggplot(aes(x = Model, y = PearsonCor, fill = ModelType)) +
+  ggplot(aes(x = Model, y = MeanPearson, fill = ModelType)) +
   geom_boxplot(position = "dodge2") +
-  labs(y = "Predictive Ability")+
+  labs(y = "Predictive Ability (*r*)")+
   theme_bw() +
   lims(y = c(0,1)) +
   facet_grid(~plot_categories) +
   scale_fill_manual(name = "Model Type", labels = c("GRM", "GRM + TRM", "TRM"),
                     values = c("#F79F1F", "#A3CB38", "#1289A7")) +
-  theme(axis.text.x = element_markdown(angle = 45, hjust = 1))
+  theme(axis.text.x = element_markdown(angle = 45, hjust = 1),
+        axis.title.y = element_markdown())
 
 plotmanuscript
-ggsave(plotmanuscript, filename = "./RESULT/Figure3_predictions_bytype.png", device = "png", units = "in", width = 11, height = 7)
+ggsave(plotmanuscript, filename = "./RESULT/15.1-Prediction_plots/Figure3_predictions_bytype_v2.png", device = "png", units = "in", width = 11, height = 7)
