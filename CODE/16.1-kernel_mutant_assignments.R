@@ -117,6 +117,6 @@ sh2i_b73 <- rlog_b73_assigned %>%
         strip.text.x = element_markdown())+
   facet_grid(~GeneLab)
 sh2i_b73
-ggsave(plot = sh2i_b73, filename = "RESULT/16.1-kernel_mutant_assignments/Figure2_sh2i_B73alignment_vertical.png",
-       device = "png", units = "in", width = 7, height = 5)
+ggsave(plot = sh2i_b73, filename = "RESULT/16.1-kernel_mutant_assignments/Figure2_highres.png",
+       device = "png", units = "in", width = 7, height = 5, dpi = 400)
 
