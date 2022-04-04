@@ -1,10 +1,12 @@
-#  Hershberger et al. Transcriptome-wide association and prediction for carotenoids and tocochromanols in fresh sweet corn kernels
+#  Transcriptome-wide association and prediction for carotenoids and tocochromanols in fresh sweet corn kernels
 ![language: R](https://img.shields.io/badge/language-R-blue.svg)
-[![DOI:10.1101/2021.09.24.461734](http://img.shields.io/badge/DOI-10.1101/2021.09.24.461734-B31B1B.svg)](https://doi.org/10.1101/2021.09.24.461734)
+[![DOI:10.1002/tpg2.20197](https://img.shields.io/badge/DOI%3A-10.1002%2Ftpg2.20197-B31B1B)](https://doi.org/10.1002/tpg2.20197)
 
-# PREPRINT
+# Citation
 
-This repository and website documents all analyses, summary, tables and figures associated with the following PREPRINT: [Transcriptome-wide association and prediction for carotenoids and tocochromanols in fresh sweet corn kernels](https://doi.org/10.1101/2021.09.24.461734)!
+This repository and website documents all analyses, summary, tables and figures associated with the following manuscript: [Transcriptome-wide association and prediction for carotenoids and tocochromanols in fresh sweet corn kernels](https://doi.org/10.1002/tpg2.20197).
+
+> Hershberger, J., Tanaka, R.,Wood, J. C., Kaczmar, N., Wu, D., Hamilton, J. P., DellaPenna, D., Buell, C. R., & Gore, M. A. (2022).Transcriptome-wide association and prediction forcarotenoids and tocochromanols in fresh sweet cornkernels. *Plant Genome*, *e20197*. [https://doi.org/10.1002/tpg2.20197](https://doi.org/10.1002/tpg2.20197)
 
 # Abstract
 
